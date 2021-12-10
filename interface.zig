@@ -96,12 +96,12 @@ pub const Storage = struct {
     };
 
     pub const Owning = struct {
-        allocator: *mem.Allocator,
+        allocator: mem.Allocator,
         mem: []u8,
 
         fn makeInit(comptime TInterface: type) type {
             return struct {
-                fn init(obj: anytype, allocator: *std.mem.Allocator) !TInterface {
+                fn init(obj: anytype, allocator: std.mem.Allocator) !TInterface {
                     const AllocT = @TypeOf(obj);
 
                     var ptr = try allocator.create(AllocT);
@@ -123,8 +123,7 @@ pub const Storage = struct {
         }
 
         pub fn deinit(self: Owning) void {
-            const result = self.allocator.shrinkBytes(self.mem, 0, 0, 0, 0);
-            assert(result == 0);
+            self.allocator.destroy(&self.mem[0]);
         }
     };
 
