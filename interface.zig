@@ -258,9 +258,9 @@ fn getFunctionFromImpl(comptime name: []const u8, comptime FnT: type, comptime I
     // Find the candidate in the implementation type.
     for (std.meta.declarations(ImplT)) |decl| {
         if (std.mem.eql(u8, name, decl.name)) {
-            switch (decl.data) {
+            switch (@typeInfo(@TypeOf(@field(ImplT, decl.name)))) {
                 .Fn => |fn_decl| {
-                    const args = @typeInfo(fn_decl.fn_type).Fn.args;
+                    const args = fn_decl.args;
 
                     if (args.len == 0) {
                         return @field(ImplT, name);
@@ -270,7 +270,7 @@ fn getFunctionFromImpl(comptime name: []const u8, comptime FnT: type, comptime I
                         const arg0_type = args[0].arg_type.?;
                         const is_method = arg0_type == ImplT or arg0_type == *ImplT or arg0_type == *const ImplT;
 
-                        const candidate_cc = @typeInfo(fn_decl.fn_type).Fn.calling_convention;
+                        const candidate_cc = fn_decl.calling_convention;
                         switch (candidate_cc) {
                             .Async, .Unspecified => {},
                             else => return null,
@@ -366,9 +366,9 @@ fn checkVtableType(comptime VTableT: type) void {
     }
 
     for (std.meta.declarations(VTableT)) |decl| {
-        switch (decl.data) {
+        switch (@typeInfo(@TypeOf(@field(VTableT, decl.name)))) {
             .Fn => @compileError("VTable type defines method '" ++ decl.name ++ "'."),
-            .Type, .Var => {},
+            else => {},
         }
     }
 
